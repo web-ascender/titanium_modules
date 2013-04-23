@@ -33,7 +33,7 @@ public class CompressionModule extends KrollModule {
 	@Kroll.method
 	public String zip(Object[] args) {
 		// Check that our arguments are valid.
-		if (args.length != 2) {
+		if (args.length < 2) {
 			return "Invalid number of arguments provided!";
 		}
 
@@ -41,8 +41,7 @@ public class CompressionModule extends KrollModule {
 		if (rawZip == null || rawZip.length() == 0) {
 			return "archiveFile was not specified or was empty!";
 		}
-		TiBaseFile zip = TiFileFactory.createTitaniumFile(rawZip,
-				false);
+		TiBaseFile zip = TiFileFactory.createTitaniumFile(rawZip, false);
 
 		Object[] rawFiles = (Object[]) args[1];
 		if (rawFiles == null || rawFiles.length == 0) {
@@ -50,8 +49,11 @@ public class CompressionModule extends KrollModule {
 		}
 		LinkedList<TiBaseFile> files = new LinkedList<TiBaseFile>();
 		for (Object rawFile : rawFiles) {
-			files.add(TiFileFactory.createTitaniumFile(rawFile.toString(),
-			    false));
+			files.add(TiFileFactory.createTitaniumFile(rawFile.toString(),false));
+		}
+		Boolean useFullPaths = false;
+		if(args.length == 3) {
+			useFullPaths = (Boolean) args[2];
 		}
 
 		// And then zip the files in to the archive.
@@ -65,8 +67,9 @@ public class CompressionModule extends KrollModule {
 				if (!file.exists()) {
 					Util.e("Skipping over file, because it does not exist: "
 							+ file.nativePath());
-				} else {
-					ZipEntry ze = new ZipEntry(file.nativePath());
+				} else {					
+					String zipEntryName = useFullPaths ? file.nativePath() : file.name();
+					ZipEntry ze = new ZipEntry(zipEntryName);					
 					zout.putNextEntry(ze);
 					writeInFile(file, zout);
 					zout.closeEntry();
